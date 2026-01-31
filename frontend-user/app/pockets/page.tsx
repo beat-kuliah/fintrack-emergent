@@ -53,6 +53,7 @@ export default function PocketsPage() {
     balance: "",
     percentage_allocation: "",
   });
+  const [selectedAccountType, setSelectedAccountType] = useState("");
 
   useEffect(() => {
     fetchData();
