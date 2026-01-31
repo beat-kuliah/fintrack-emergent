@@ -24,6 +24,7 @@ interface TransactionSummary {
 }
 
 export default function DashboardPage() {
+  const { user, loading: authLoading } = useAuth();
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [summary, setSummary] = useState<TransactionSummary | null>(null);
   const [loading, setLoading] = useState(true);
