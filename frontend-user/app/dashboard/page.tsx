@@ -5,6 +5,7 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import axios from "axios";
 import { Wallet, TrendingUp, PiggyBank, Receipt } from "lucide-react";
+import { useAuth } from "@/lib/useAuth";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
