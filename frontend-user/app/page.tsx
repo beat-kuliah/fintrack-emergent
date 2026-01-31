@@ -72,10 +72,10 @@ export default function HomePage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-blue-100 to-blue-200 p-4">
+    <div className="min-h-screen flex items-center justify-center gradient-bg p-4">
       <Card className="w-full max-w-md" data-testid="auth-card">
         <CardHeader className="space-y-2">
-          <CardTitle className="text-3xl font-bold text-center text-blue-600">
+          <CardTitle className="text-3xl font-bold text-center text-blue-600 dark:text-blue-400">
             💰 Financial Tracker
           </CardTitle>
           <CardDescription className="text-center">
