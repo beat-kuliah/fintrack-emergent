@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,6 +18,27 @@ export default function HomePage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+
+  useEffect(() => {
+    // Check if already logged in
+    const token = localStorage.getItem("token");
+    if (token) {
+      // Verify token
+      axios
+        .get(`${API_URL}/auth/me`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        .then(() => {
+          // Token valid, redirect to dashboard
+          router.push("/dashboard");
+        })
+        .catch(() => {
+          // Token invalid, clear and stay on login
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+        });
+    }
+  }, [router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
