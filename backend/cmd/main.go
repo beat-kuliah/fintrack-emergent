@@ -89,6 +89,52 @@ func main() {
 				accounts.GET("/:id", accountHandler.GetByID)
 				accounts.DELETE("/:id", accountHandler.Delete)
 			}
+
+			// Transactions routes
+			transactions := protected.Group("/transactions")
+			{
+				transactions.POST("", transactionHandler.Create)
+				transactions.GET("", transactionHandler.GetAll)
+				transactions.GET("/summary", transactionHandler.GetSummary)
+				transactions.GET("/:id", transactionHandler.GetByID)
+				transactions.DELETE("/:id", transactionHandler.Delete)
+			}
+
+			// Pockets routes
+			pockets := protected.Group("/pockets")
+			{
+				pockets.POST("", pocketHandler.Create)
+				pockets.GET("", pocketHandler.GetAll)
+				pockets.GET("/:id", pocketHandler.GetByID)
+				pockets.DELETE("/:id", pocketHandler.Delete)
+			}
+
+			// Budgets routes
+			budgets := protected.Group("/budgets")
+			{
+				budgets.POST("", budgetHandler.Create)
+				budgets.GET("", budgetHandler.GetAll)
+				budgets.GET("/:id", budgetHandler.GetByID)
+				budgets.DELETE("/:id", budgetHandler.Delete)
+			}
+
+			// Credit cards routes
+			creditCards := protected.Group("/credit-cards")
+			{
+				creditCards.POST("", creditCardHandler.Create)
+				creditCards.GET("", creditCardHandler.GetAll)
+				creditCards.GET("/:id", creditCardHandler.GetByID)
+				creditCards.DELETE("/:id", creditCardHandler.Delete)
+			}
+
+			// Investments routes
+			investments := protected.Group("/investments")
+			{
+				investments.POST("", investmentHandler.Create)
+				investments.GET("", investmentHandler.GetAll)
+				investments.GET("/:id", investmentHandler.GetByID)
+				investments.DELETE("/:id", investmentHandler.Delete)
+			}
 		}
 	}
 
