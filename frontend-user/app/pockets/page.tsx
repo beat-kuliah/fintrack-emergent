@@ -257,7 +257,11 @@ export default function PocketsPage() {
                   <Label htmlFor="account">Parent Account</Label>
                   <Select
                     value={formData.account_id}
-                    onValueChange={(value) => setFormData({ ...formData, account_id: value })}
+                    onValueChange={(value) => {
+                      const selectedAccount = accounts.find(a => a.id === value);
+                      setFormData({ ...formData, account_id: value, balance: "" });
+                      setSelectedAccountType(selectedAccount?.type || "");
+                    }}
                     required
                   >
                     <SelectTrigger data-testid="pocket-account-select">
@@ -266,11 +270,16 @@ export default function PocketsPage() {
                     <SelectContent>
                       {accounts.map((account) => (
                         <SelectItem key={account.id} value={account.id}>
-                          {account.name}
+                          {account.name} ({account.type.replace("_", " ")})
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
+                  {selectedAccountType && selectedAccountType !== "credit_card" && (
+                    <p className="text-xs text-amber-600">
+                      ⚠️ Balance can only be set for Credit Card accounts
+                    </p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="name">Pocket Name</Label>
