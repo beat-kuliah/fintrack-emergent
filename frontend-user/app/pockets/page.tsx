@@ -293,16 +293,36 @@ export default function PocketsPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="balance">Initial Balance</Label>
+                  <Label htmlFor="balance">
+                    Initial Balance
+                    {selectedAccountType !== "credit_card" && (
+                      <span className="text-xs text-gray-500 ml-2">(Only for Credit Card)</span>
+                    )}
+                  </Label>
                   <Input
                     id="balance"
                     type="number"
                     step="0.01"
-                    placeholder="0"
-                    value={formData.balance}
-                    onChange={(e) => setFormData({ ...formData, balance: e.target.value })}
+                    placeholder={selectedAccountType === "credit_card" ? "0" : "0 (Read only)"}
+                    value={selectedAccountType === "credit_card" ? formData.balance : "0"}
+                    onChange={(e) => {
+                      if (selectedAccountType === "credit_card") {
+                        setFormData({ ...formData, balance: e.target.value });
+                      }
+                    }}
+                    disabled={selectedAccountType !== "credit_card"}
+                    className={selectedAccountType !== "credit_card" ? "bg-gray-100 cursor-not-allowed" : ""}
                     data-testid="pocket-balance-input"
                   />
+                  {selectedAccountType === "credit_card" ? (
+                    <p className="text-xs text-gray-500">
+                      Set initial balance for this credit card pocket
+                    </p>
+                  ) : (
+                    <p className="text-xs text-gray-500">
+                      Balance is automatically set to 0 for non-credit accounts
+                    </p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="percentage">Allocation Percentage</Label>
