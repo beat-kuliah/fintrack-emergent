@@ -78,7 +78,9 @@ export default function DashboardPage() {
         {/* Header */}
         <div>
           <h2 className="text-3xl font-bold text-gray-900">Dashboard</h2>
-          <p className="text-gray-500 mt-1">Welcome to your financial overview</p>
+          <p className="text-gray-500 mt-1">
+            Welcome{user?.name ? ` ${user.name}` : ""} to your financial overview
+          </p>
         </div>
 
         {/* Stats Grid */}
