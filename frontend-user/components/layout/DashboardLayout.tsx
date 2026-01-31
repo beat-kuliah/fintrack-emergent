@@ -121,18 +121,18 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         {/* Sidebar */}
         <aside
           className={cn(
-            "fixed lg:static inset-y-0 left-0 z-50 w-64 bg-white shadow-xl transform transition-transform duration-200 ease-in-out lg:translate-x-0",
+            "fixed lg:static inset-y-0 left-0 z-50 w-64 bg-white dark:bg-gray-800 shadow-xl transform transition-transform duration-200 ease-in-out lg:translate-x-0",
             sidebarOpen ? "translate-x-0" : "-translate-x-full"
           )}
           data-testid="sidebar"
         >
           <div className="h-full flex flex-col">
             {/* Logo */}
-            <div className="p-6 border-b border-blue-100 hidden lg:block">
-              <h1 className="text-2xl font-bold text-blue-600">
+            <div className="p-6 border-b border-blue-100 dark:border-gray-700 hidden lg:block">
+              <h1 className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                 💰 Financial Tracker
               </h1>
-              <p className="text-sm text-gray-500 mt-1">{user?.full_name}</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{user?.full_name}</p>
             </div>
 
             {/* Navigation */}
@@ -150,7 +150,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                       "flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors",
                       isActive
                         ? "bg-blue-500 text-white"
-                        : "text-gray-700 hover:bg-blue-50"
+                        : "text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-gray-700"
                     )}
                     data-testid={`nav-${item.href.slice(1)}`}
                   >
@@ -161,8 +161,26 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               })}
             </nav>
 
-            {/* Logout */}
-            <div className="p-4 border-t border-blue-100">
+            {/* Theme Toggle & Logout */}
+            <div className="p-4 border-t border-blue-100 dark:border-gray-700 space-y-2">
+              <Button
+                variant="outline"
+                className="w-full justify-start"
+                onClick={toggleTheme}
+                data-testid="theme-toggle-button"
+              >
+                {theme === "light" ? (
+                  <>
+                    <Moon className="h-5 w-5 mr-3" />
+                    Dark Mode
+                  </>
+                ) : (
+                  <>
+                    <Sun className="h-5 w-5 mr-3" />
+                    Light Mode
+                  </>
+                )}
+              </Button>
               <Button
                 variant="outline"
                 className="w-full justify-start"
