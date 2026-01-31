@@ -1,10 +1,7 @@
-import type { Metadata } from "next";
-import "./globals.css";
+"use client";
 
-export const metadata: Metadata = {
-  title: "Financial Tracker",
-  description: "Track your finances with ease",
-};
+import "./globals.css";
+import { ThemeProvider } from "@/lib/ThemeProvider";
 
 export default function RootLayout({
   children,
@@ -12,9 +9,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className="antialiased">
-        {children}
+        <ThemeProvider>
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   );
