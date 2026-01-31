@@ -93,18 +93,28 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-100 to-blue-200">
+    <div className="min-h-screen gradient-bg">
       {/* Mobile Header */}
-      <div className="lg:hidden bg-white shadow-sm border-b border-blue-200 p-4 flex items-center justify-between">
-        <h1 className="text-xl font-bold text-blue-600">💰 Financial Tracker</h1>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-          data-testid="mobile-menu-button"
-        >
-          {sidebarOpen ? <X /> : <Menu />}
-        </Button>
+      <div className="lg:hidden bg-white dark:bg-gray-800 shadow-sm border-b border-blue-200 dark:border-gray-700 p-4 flex items-center justify-between">
+        <h1 className="text-xl font-bold text-blue-600 dark:text-blue-400">💰 Financial Tracker</h1>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleTheme}
+            data-testid="mobile-theme-toggle"
+          >
+            {theme === "light" ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            data-testid="mobile-menu-button"
+          >
+            {sidebarOpen ? <X /> : <Menu />}
+          </Button>
+        </div>
       </div>
 
       <div className="flex">
