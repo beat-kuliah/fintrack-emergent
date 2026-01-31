@@ -30,10 +30,20 @@ func main() {
 	// Initialize repositories
 	userRepo := repository.NewUserRepository(db)
 	accountRepo := repository.NewAccountRepository(db)
+	transactionRepo := repository.NewTransactionRepository(db)
+	pocketRepo := repository.NewPocketRepository(db)
+	budgetRepo := repository.NewBudgetRepository(db)
+	creditCardRepo := repository.NewCreditCardRepository(db)
+	investmentRepo := repository.NewInvestmentRepository(db)
 
 	// Initialize handlers
 	authHandler := handlers.NewAuthHandler(userRepo)
 	accountHandler := handlers.NewAccountHandler(accountRepo)
+	transactionHandler := handlers.NewTransactionHandler(transactionRepo, accountRepo)
+	pocketHandler := handlers.NewPocketHandler(pocketRepo)
+	budgetHandler := handlers.NewBudgetHandler(budgetRepo)
+	creditCardHandler := handlers.NewCreditCardHandler(creditCardRepo)
+	investmentHandler := handlers.NewInvestmentHandler(investmentRepo)
 
 	// Setup Gin router
 	router := gin.Default()
