@@ -1,11 +1,11 @@
 .PHONY: migrate-up migrate-down migrate-create run build
 
-# Database URL
-DATABASE_URL := postgresql://$(DB_USER):$(DB_PASSWORD)@$(DB_HOST):$(DB_PORT)/$(DB_NAME)?sslmode=$(DB_SSLMODE)
-
 # Load environment variables
 include .env
 export
+
+# Database URL
+DATABASE_URL := postgresql://$(DB_USER):$(DB_PASSWORD)@$(DB_HOST):$(DB_PORT)/$(DB_NAME)?sslmode=$(DB_SSLMODE)
 
 # Run migrations up
 migrate-up:
