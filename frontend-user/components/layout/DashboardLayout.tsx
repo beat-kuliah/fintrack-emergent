@@ -68,19 +68,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
-  const [user, setUser] = React.useState<any>(null);
-
-  React.useEffect(() => {
-    const token = localStorage.getItem("token");
-    const userData = localStorage.getItem("user");
-
-    if (!token || !userData) {
-      router.push("/");
-      return;
-    }
-
-    setUser(JSON.parse(userData));
-  }, [router]);
+  const { user, loading } = useAuth();
+  const { theme, toggleTheme } = useTheme();
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -88,12 +77,19 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     router.push("/");
   };
 
-  if (!user) {
+  if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p>Loading...</p>
+      <div className="min-h-screen gradient-bg flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-300">Loading...</p>
+        </div>
       </div>
     );
+  }
+
+  if (!user) {
+    return null; // Will redirect in useAuth
   }
 
   return (
