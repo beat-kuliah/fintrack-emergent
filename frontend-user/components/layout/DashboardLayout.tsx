@@ -1,0 +1,184 @@
+"use client";
+
+import React from "react";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { cn } from "@/lib/utils";
+import {
+  LayoutDashboard,
+  Wallet,
+  TrendingUp,
+  CreditCard,
+  PiggyBank,
+  Receipt,
+  Target,
+  LogOut,
+  Menu,
+  X,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+
+const menuItems = [
+  {
+    title: "Dashboard",
+    href: "/dashboard",
+    icon: LayoutDashboard,
+  },
+  {
+    title: "Accounts",
+    href: "/accounts",
+    icon: Wallet,
+  },
+  {
+    title: "Transactions",
+    href: "/transactions",
+    icon: Receipt,
+  },
+  {
+    title: "Pockets",
+    href: "/pockets",
+    icon: PiggyBank,
+  },
+  {
+    title: "Budgets",
+    href: "/budgets",
+    icon: Target,
+  },
+  {
+    title: "Credit Cards",
+    href: "/credit-cards",
+    icon: CreditCard,
+  },
+  {
+    title: "Investments",
+    href: "/investments",
+    icon: TrendingUp,
+  },
+];
+
+interface DashboardLayoutProps {
+  children: React.ReactNode;
+}
+
+export default function DashboardLayout({ children }: DashboardLayoutProps) {
+  const pathname = usePathname();
+  const router = useRouter();
+  const [sidebarOpen, setSidebarOpen] = React.useState(false);
+  const [user, setUser] = React.useState<any>(null);
+
+  React.useEffect(() => {
+    const token = localStorage.getItem("token");
+    const userData = localStorage.getItem("user");
+
+    if (!token || !userData) {
+      router.push("/");
+      return;
+    }
+
+    setUser(JSON.parse(userData));
+  }, [router]);
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    router.push("/");
+  };
+
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p>Loading...</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-100 to-blue-200">
+      {/* Mobile Header */}
+      <div className="lg:hidden bg-white shadow-sm border-b border-blue-200 p-4 flex items-center justify-between">
+        <h1 className="text-xl font-bold text-blue-600">💰 Financial Tracker</h1>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+          data-testid="mobile-menu-button"
+        >
+          {sidebarOpen ? <X /> : <Menu />}
+        </Button>
+      </div>
+
+      <div className="flex">
+        {/* Sidebar */}
+        <aside
+          className={cn(
+            "fixed lg:static inset-y-0 left-0 z-50 w-64 bg-white shadow-xl transform transition-transform duration-200 ease-in-out lg:translate-x-0",
+            sidebarOpen ? "translate-x-0" : "-translate-x-full"
+          )}
+          data-testid="sidebar"
+        >
+          <div className="h-full flex flex-col">
+            {/* Logo */}
+            <div className="p-6 border-b border-blue-100 hidden lg:block">
+              <h1 className="text-2xl font-bold text-blue-600">
+                💰 Financial Tracker
+              </h1>
+              <p className="text-sm text-gray-500 mt-1">{user?.full_name}</p>
+            </div>
+
+            {/* Navigation */}
+            <nav className="flex-1 p-4 space-y-1" data-testid="nav-menu">
+              {menuItems.map((item) => {
+                const Icon = item.icon;
+                const isActive = pathname === item.href;
+
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setSidebarOpen(false)}
+                    className={cn(
+                      "flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors",
+                      isActive
+                        ? "bg-blue-500 text-white"
+                        : "text-gray-700 hover:bg-blue-50"
+                    )}
+                    data-testid={`nav-${item.href.slice(1)}`}
+                  >
+                    <Icon className="h-5 w-5" />
+                    <span className="font-medium">{item.title}</span>
+                  </Link>
+                );
+              })}
+            </nav>
+
+            {/* Logout */}
+            <div className="p-4 border-t border-blue-100">
+              <Button
+                variant="outline"
+                className="w-full justify-start"
+                onClick={handleLogout}
+                data-testid="sidebar-logout-button"
+              >
+                <LogOut className="h-5 w-5 mr-3" />
+                Logout
+              </Button>
+            </div>
+          </div>
+        </aside>
+
+        {/* Overlay for mobile */}
+        {sidebarOpen && (
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
+
+        {/* Main Content */}
+        <main className="flex-1 lg:ml-0 min-h-screen">
+          <div className="max-w-7xl mx-auto p-6">{children}</div>
+        </main>
+      </div>
+    </div>
+  );
+}
