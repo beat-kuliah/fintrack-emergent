@@ -523,6 +523,11 @@ video {
     --input: 214.3 31.8% 91.4%;
     --ring: 217 91% 60%;
     --radius: 0.5rem;
+    
+    /* Custom gradient colors */
+    --gradient-from: 200 100% 95%; /* Light blue */
+    --gradient-via: 180 80% 92%; /* Blue-green */
+    --gradient-to: 160 70% 90%; /* Light green */
   }
   * {
   border-color: hsl(var(--border));
@@ -1250,6 +1255,25 @@ video {
 }
 .ease-in-out {
   animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Custom gradient background */
+.gradient-bg {
+  background: linear-gradient(
+    135deg,
+    hsl(var(--gradient-from)),
+    hsl(var(--gradient-via)) 50%,
+    hsl(var(--gradient-to))
+  );
+}
+
+.gradient-bg-alt {
+  background: linear-gradient(
+    to bottom right,
+    hsl(var(--gradient-from)),
+    hsl(var(--gradient-via)),
+    hsl(var(--gradient-to))
+  );
 }
 
 .file\:border-0::file-selector-button {

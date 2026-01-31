@@ -24,6 +24,11 @@
     --input: 214.3 31.8% 91.4%;
     --ring: 217 91% 60%;
     --radius: 0.5rem;
+    
+    /* Custom gradient colors */
+    --gradient-from: 200 100% 95%; /* Light blue */
+    --gradient-via: 180 80% 92%; /* Blue-green */
+    --gradient-to: 160 70% 90%; /* Light green */
   }
 
   .dark {
@@ -46,6 +51,11 @@
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 224.3 76.3% 48%;
+    
+    /* Dark mode gradient */
+    --gradient-from: 220 40% 15%; /* Dark blue */
+    --gradient-via: 200 35% 18%; /* Dark blue-green */
+    --gradient-to: 180 30% 20%; /* Dark green */
   }
 }
 
@@ -56,4 +66,23 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Custom gradient background */
+.gradient-bg {
+  background: linear-gradient(
+    135deg,
+    hsl(var(--gradient-from)),
+    hsl(var(--gradient-via)) 50%,
+    hsl(var(--gradient-to))
+  );
+}
+
+.gradient-bg-alt {
+  background: linear-gradient(
+    to bottom right,
+    hsl(var(--gradient-from)),
+    hsl(var(--gradient-via)),
+    hsl(var(--gradient-to))
+  );
 }
