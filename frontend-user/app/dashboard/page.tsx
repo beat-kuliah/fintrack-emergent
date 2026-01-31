@@ -62,7 +62,7 @@ export default function DashboardPage() {
     return accounts.reduce((sum, acc) => sum + acc.balance, 0);
   };
 
-  if (loading) {
+  if (authLoading || loading) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center py-12">
