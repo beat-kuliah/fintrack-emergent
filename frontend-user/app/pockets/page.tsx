@@ -87,13 +87,16 @@ export default function PocketsPage() {
     const token = localStorage.getItem("token");
     if (!token) return;
 
+    // If account type is not credit_card, force balance to 0
+    const finalBalance = selectedAccountType === "credit_card" ? parseFloat(formData.balance) || 0 : 0;
+
     try {
       await axios.post(
         `${API_URL}/pockets`,
         {
           account_id: formData.account_id,
           name: formData.name,
-          balance: parseFloat(formData.balance) || 0,
+          balance: finalBalance,
           percentage_allocation: parseFloat(formData.percentage_allocation) || 0,
         },
         {
@@ -103,6 +106,7 @@ export default function PocketsPage() {
 
       setDialogOpen(false);
       setFormData({ account_id: "", name: "", balance: "", percentage_allocation: "" });
+      setSelectedAccountType("");
       fetchData();
     } catch (err: any) {
       alert(err.response?.data?.error || "Failed to create pocket");
