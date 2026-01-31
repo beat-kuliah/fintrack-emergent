@@ -4,6 +4,8 @@ import React from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/lib/useAuth";
+import { useTheme } from "@/lib/ThemeProvider";
 import {
   LayoutDashboard,
   Wallet,
@@ -15,6 +17,8 @@ import {
   LogOut,
   Menu,
   X,
+  Sun,
+  Moon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
