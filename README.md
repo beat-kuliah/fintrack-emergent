@@ -1,324 +1,196 @@
-# 💰 Financial Tracker Application
+[![GitHub Workflow Status (branch)](https://img.shields.io/github/actions/workflow/status/golang-migrate/migrate/ci.yaml?branch=master)](https://github.com/golang-migrate/migrate/actions/workflows/ci.yaml?query=branch%3Amaster)
+[![GoDoc](https://pkg.go.dev/badge/github.com/golang-migrate/migrate)](https://pkg.go.dev/github.com/golang-migrate/migrate/v4)
+[![Coverage Status](https://img.shields.io/coveralls/github/golang-migrate/migrate/master.svg)](https://coveralls.io/github/golang-migrate/migrate?branch=master)
+[![packagecloud.io](https://img.shields.io/badge/deb-packagecloud.io-844fec.svg)](https://packagecloud.io/golang-migrate/migrate?filter=debs)
+[![Docker Pulls](https://img.shields.io/docker/pulls/migrate/migrate.svg)](https://hub.docker.com/r/migrate/migrate/)
+![Supported Go Versions](https://img.shields.io/badge/Go-1.20%2C%201.21-lightgrey.svg)
+[![GitHub Release](https://img.shields.io/github/release/golang-migrate/migrate.svg)](https://github.com/golang-migrate/migrate/releases)
+[![Go Report Card](https://goreportcard.com/badge/github.com/golang-migrate/migrate/v4)](https://goreportcard.com/report/github.com/golang-migrate/migrate/v4)
 
-Financial Tracker adalah aplikasi manajemen keuangan yang dibangun dengan **Next.js**, **Go**, dan **PostgreSQL**. Aplikasi ini menyediakan fitur core finance management termasuk tracking transaksi, budgeting, credit card management, dan investment tracking dengan automated money splitting.
+# migrate
 
-## 🏗️ Tech Stack
+__Database migrations written in Go. Use as [CLI](#cli-usage) or import as [library](#use-in-your-go-project).__
 
-### Frontend User
-- **Framework:** Next.js 14 dengan TypeScript
-- **Styling:** Tailwind CSS
-- **UI Components:** shadcn/ui (Radix UI)
-- **HTTP Client:** Axios
-- **Form Management:** React Hook Form + Zod
-- **Charts:** Recharts
+* Migrate reads migrations from [sources](#migration-sources)
+   and applies them in correct order to a [database](#databases).
+* Drivers are "dumb", migrate glues everything together and makes sure the logic is bulletproof.
+   (Keeps the drivers lightweight, too.)
+* Database drivers don't assume things or try to correct user input. When in doubt, fail.
 
-### Backend
-- **Language:** Go 1.21
-- **Framework:** Gin (Web Framework)
-- **Database:** PostgreSQL 15
-- **Auth:** JWT (golang-jwt/jwt)
-- **Password:** bcrypt
-- **Migrations:** golang-migrate
+Forked from [mattes/migrate](https://github.com/mattes/migrate)
 
-### Database
-- **Type:** PostgreSQL 15
-- **Tables:** 8 core tables (users, accounts, pockets, transactions, budgets, credit_cards, investments, automation_rules)
+## Databases
 
-## 📁 Project Structure
+Database drivers run migrations. [Add a new database?](database/driver.go)
 
-```
-/app/
-├── backend/                      # Go REST API
-│   ├── cmd/
-│   │   └── main.go              # Entry point
-│   ├── config/
-│   │   └── database.go          # Database connection
-│   ├── internal/
-│   │   ├── handlers/            # HTTP handlers
-│   │   ├── models/              # Data models
-│   │   ├── repository/          # Database operations
-│   │   ├── services/            # Business logic
-│   │   └── middleware/          # Auth middleware
-│   ├── migrations/              # PostgreSQL migrations
-│   │   ├── 000001_create_users_table.up.sql
-│   │   ├── 000002_create_accounts_table.up.sql
-│   │   └── ...
-│   ├── Makefile                 # Build & migration commands
-│   ├── go.mod
-│   ├── go.sum
-│   └── .env                     # Environment variables
-│
-└── frontend-user/               # Next.js User App
-    ├── app/
-    │   ├── page.tsx             # Login/Register page
-    │   ├── dashboard/
-    │   │   └── page.tsx         # Main dashboard
-    │   ├── layout.tsx
-    │   └── globals.css
-    ├── components/
-    │   └── ui/                  # shadcn/ui components
-    ├── lib/
-    │   └── utils.ts
-    ├── package.json
-    ├── tsconfig.json
-    └── .env.local               # Frontend environment variables
-```
+* [PostgreSQL](database/postgres)
+* [PGX v4](database/pgx)
+* [PGX v5](database/pgx/v5)
+* [Redshift](database/redshift)
+* [Ql](database/ql)
+* [Cassandra / ScyllaDB](database/cassandra)
+* [SQLite](database/sqlite)
+* [SQLite3](database/sqlite3) ([todo #165](https://github.com/mattes/migrate/issues/165))
+* [SQLCipher](database/sqlcipher)
+* [MySQL / MariaDB](database/mysql)
+* [Neo4j](database/neo4j)
+* [MongoDB](database/mongodb)
+* [CrateDB](database/crate) ([todo #170](https://github.com/mattes/migrate/issues/170))
+* [Shell](database/shell) ([todo #171](https://github.com/mattes/migrate/issues/171))
+* [Google Cloud Spanner](database/spanner)
+* [CockroachDB](database/cockroachdb)
+* [YugabyteDB](database/yugabytedb)
+* [ClickHouse](database/clickhouse)
+* [Firebird](database/firebird)
+* [MS SQL Server](database/sqlserver)
+* [RQLite](database/rqlite)
 
-## 🚀 Quick Start
+### Database URLs
 
-### Prerequisites
-- Go 1.21+
-- Node.js 18+
-- PostgreSQL 15+
-- golang-migrate
+Database connection strings are specified via URLs. The URL format is driver dependent but generally has the form: `dbdriver://username:password@host:port/dbname?param1=true&param2=false`
 
-### Backend Setup
+Any [reserved URL characters](https://en.wikipedia.org/wiki/Percent-encoding#Percent-encoding_reserved_characters) need to be escaped. Note, the `%` character also [needs to be escaped](https://en.wikipedia.org/wiki/Percent-encoding#Percent-encoding_the_percent_character)
 
-1. **Navigate to backend directory:**
-```bash
-cd /app/backend
-```
+Explicitly, the following characters need to be escaped:
+`!`, `#`, `$`, `%`, `&`, `'`, `(`, `)`, `*`, `+`, `,`, `/`, `:`, `;`, `=`, `?`, `@`, `[`, `]`
 
-2. **Install Go dependencies:**
-```bash
-go mod download
-```
-
-3. **Configure environment variables:**
-Edit `/app/backend/.env`:
-```env
-DB_HOST=localhost
-DB_PORT=5432
-DB_USER=postgres
-DB_PASSWORD=postgres
-DB_NAME=financial_tracker
-DB_SSLMODE=disable
-
-PORT=8001
-
-JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
-
-CORS_ORIGINS=http://localhost:3000
-```
-
-4. **Run migrations:**
-```bash
-make migrate-up
-```
-
-5. **Start backend server:**
-```bash
-make run
-# atau
-go run cmd/main.go
-```
-
-Backend akan berjalan di `http://localhost:8001`
-
-### Frontend Setup
-
-1. **Navigate to frontend directory:**
-```bash
-cd /app/frontend-user
-```
-
-2. **Install dependencies:**
-```bash
-yarn install
-```
-
-3. **Configure environment variables:**
-Edit `/app/frontend-user/.env.local`:
-```env
-NEXT_PUBLIC_API_URL=http://localhost:8001/api
-```
-
-4. **Start development server:**
-```bash
-yarn dev
-```
-
-Frontend akan berjalan di `http://localhost:3000`
-
-## 📊 Database Schema
-
-### Core Tables
-
-1. **users** - User authentication & profile
-2. **accounts** - Financial accounts (bank, wallet, investment, credit_card)
-3. **pockets** - Sub-accounts untuk money splitting
-4. **transactions** - Income/expense tracking
-5. **budgets** - Budget management
-6. **credit_cards** - Credit card management
-7. **investments** - Investment portfolio
-8. **automation_rules** - Rule engine untuk auto-splitting
-
-## 🔐 API Endpoints
-
-### Authentication
-- `POST /api/auth/register` - Register user baru
-- `POST /api/auth/login` - Login user
-- `GET /api/auth/me` - Get user profile (Protected)
-
-### Accounts
-- `GET /api/accounts` - List semua accounts (Protected)
-- `POST /api/accounts` - Create account baru (Protected)
-- `GET /api/accounts/:id` - Get account detail (Protected)
-- `DELETE /api/accounts/:id` - Delete account (Protected)
-
-### Coming Soon
-- Transactions CRUD
-- Budgets CRUD
-- Credit Cards CRUD
-- Investments CRUD
-- Automation Rules CRUD
-- Dashboard Analytics
-
-## 🛠️ Makefile Commands
+It's easiest to always run the URL parts of your DB connection URL (e.g. username, password, etc) through an URL encoder. See the example Python snippets below:
 
 ```bash
-# Run migrations up
-make migrate-up
-
-# Run migrations down
-make migrate-down
-
-# Create new migration
-make migrate-create name=migration_name
-
-# Run application
-make run
-
-# Build application
-make build
-
-# Install dependencies
-make deps
+$ python3 -c 'import urllib.parse; print(urllib.parse.quote(input("String to encode: "), ""))'
+String to encode: FAKEpassword!#$%&'()*+,/:;=?@[]
+FAKEpassword%21%23%24%25%26%27%28%29%2A%2B%2C%2F%3A%3B%3D%3F%40%5B%5D
+$ python2 -c 'import urllib; print urllib.quote(raw_input("String to encode: "), "")'
+String to encode: FAKEpassword!#$%&'()*+,/:;=?@[]
+FAKEpassword%21%23%24%25%26%27%28%29%2A%2B%2C%2F%3A%3B%3D%3F%40%5B%5D
+$
 ```
 
-## 🎨 Features
+## Migration Sources
 
-### ✅ Phase 1 (Completed)
-- ✅ Backend Go REST API setup
-- ✅ PostgreSQL database setup
-- ✅ Database migrations (8 tables)
-- ✅ User authentication (JWT)
-- ✅ Accounts CRUD
-- ✅ Next.js frontend setup
-- ✅ Login/Register UI
-- ✅ Dashboard UI
-- ✅ Blue minimalist theme
+Source drivers read migrations from local or remote sources. [Add a new source?](source/driver.go)
 
-### 🚧 Phase 2 (Next)
-- Transactions management dengan auto-split
-- Pockets system
-- Budget tracking
-- Credit card management
-- Investment tracking
-- Automation rules engine
+* [Filesystem](source/file) - read from filesystem
+* [io/fs](source/iofs) - read from a Go [io/fs](https://pkg.go.dev/io/fs#FS)
+* [Go-Bindata](source/go_bindata) - read from embedded binary data ([jteeuwen/go-bindata](https://github.com/jteeuwen/go-bindata))
+* [pkger](source/pkger) - read from embedded binary data ([markbates/pkger](https://github.com/markbates/pkger))
+* [GitHub](source/github) - read from remote GitHub repositories
+* [GitHub Enterprise](source/github_ee) - read from remote GitHub Enterprise repositories
+* [Bitbucket](source/bitbucket) - read from remote Bitbucket repositories
+* [Gitlab](source/gitlab) - read from remote Gitlab repositories
+* [AWS S3](source/aws_s3) - read from Amazon Web Services S3
+* [Google Cloud Storage](source/google_cloud_storage) - read from Google Cloud Platform Storage
 
-### 🔮 Phase 3 (Future)
-- Admin dashboard (Next.js)
-- WhatsApp integration
-- AI integration (Cursor Agent, OCR)
-- Real-time updates
-- Charts & visualizations
+## CLI usage
 
-## 🧪 Testing
+* Simple wrapper around this library.
+* Handles ctrl+c (SIGINT) gracefully.
+* No config search paths, no config files, no magic ENV var injections.
 
-### Backend API Test
+__[CLI Documentation](cmd/migrate)__
+
+### Basic usage
+
 ```bash
-# Health check
-curl http://localhost:8001/health
-
-# Register
-curl -X POST http://localhost:8001/api/auth/register \
-  -H "Content-Type: application/json" \
-  -d '{
-    "email": "test@example.com",
-    "password": "password123",
-    "full_name": "Test User"
-  }'
-
-# Login
-curl -X POST http://localhost:8001/api/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{
-    "email": "test@example.com",
-    "password": "password123"
-  }'
-
-# Create Account (with token)
-curl -X POST http://localhost:8001/api/accounts \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer YOUR_TOKEN" \
-  -d '{
-    "name": "Main Bank",
-    "type": "bank",
-    "balance": 5000000,
-    "currency": "IDR"
-  }'
+$ migrate -source file://path/to/migrations -database postgres://localhost:5432/database up 2
 ```
 
-## 🐛 Troubleshooting
+### Docker usage
 
-### Port sudah digunakan
 ```bash
-# Kill process di port 8001
-lsof -ti:8001 | xargs kill -9
-
-# Kill process di port 3000
-lsof -ti:3000 | xargs kill -9
+$ docker run -v {{ migration dir }}:/migrations --network host migrate/migrate
+    -path=/migrations/ -database postgres://localhost:5432/database up 2
 ```
 
-### PostgreSQL tidak berjalan
+## Use in your Go project
+
+* API is stable and frozen for this release (v3 & v4).
+* Uses [Go modules](https://golang.org/cmd/go/#hdr-Modules__module_versions__and_more) to manage dependencies.
+* To help prevent database corruptions, it supports graceful stops via `GracefulStop chan bool`.
+* Bring your own logger.
+* Uses `io.Reader` streams internally for low memory overhead.
+* Thread-safe and no goroutine leaks.
+
+__[Go Documentation](https://pkg.go.dev/github.com/golang-migrate/migrate/v4)__
+
+```go
+import (
+    "github.com/golang-migrate/migrate/v4"
+    _ "github.com/golang-migrate/migrate/v4/database/postgres"
+    _ "github.com/golang-migrate/migrate/v4/source/github"
+)
+
+func main() {
+    m, err := migrate.New(
+        "github://mattes:personal-access-token@mattes/migrate_test",
+        "postgres://localhost:5432/database?sslmode=enable")
+    m.Steps(2)
+}
+```
+
+Want to use an existing database client?
+
+```go
+import (
+    "database/sql"
+    _ "github.com/lib/pq"
+    "github.com/golang-migrate/migrate/v4"
+    "github.com/golang-migrate/migrate/v4/database/postgres"
+    _ "github.com/golang-migrate/migrate/v4/source/file"
+)
+
+func main() {
+    db, err := sql.Open("postgres", "postgres://localhost:5432/database?sslmode=enable")
+    driver, err := postgres.WithInstance(db, &postgres.Config{})
+    m, err := migrate.NewWithDatabaseInstance(
+        "file:///migrations",
+        "postgres", driver)
+    m.Up() // or m.Step(2) if you want to explicitly set the number of migrations to run
+}
+```
+
+## Getting started
+
+Go to [getting started](GETTING_STARTED.md)
+
+## Tutorials
+
+* [CockroachDB](database/cockroachdb/TUTORIAL.md)
+* [PostgreSQL](database/postgres/TUTORIAL.md)
+
+(more tutorials to come)
+
+## Migration files
+
+Each migration has an up and down migration. [Why?](FAQ.md#why-two-separate-files-up-and-down-for-a-migration)
+
 ```bash
-service postgresql start
+1481574547_create_users_table.up.sql
+1481574547_create_users_table.down.sql
 ```
 
-### Migration error
-```bash
-# Reset migrations
-make migrate-down
-make migrate-up
-```
+[Best practices: How to write migrations.](MIGRATIONS.md)
 
-## 📝 Environment Variables
+## Coming from another db migration tool?
 
-### Backend (.env)
-- `DB_HOST` - PostgreSQL host
-- `DB_PORT` - PostgreSQL port
-- `DB_USER` - PostgreSQL username
-- `DB_PASSWORD` - PostgreSQL password
-- `DB_NAME` - Database name
-- `DB_SSLMODE` - SSL mode (disable/require)
-- `PORT` - Backend server port
-- `JWT_SECRET` - JWT secret key
-- `CORS_ORIGINS` - Allowed CORS origins
+Check out [migradaptor](https://github.com/musinit/migradaptor/).
+*Note: migradaptor is not affliated or supported by this project*
 
-### Frontend (.env.local)
-- `NEXT_PUBLIC_API_URL` - Backend API URL
+## Versions
 
-## 👥 Contributing
+Version | Supported? | Import | Notes
+--------|------------|--------|------
+**master** | :white_check_mark: | `import "github.com/golang-migrate/migrate/v4"` | New features and bug fixes arrive here first |
+**v4** | :white_check_mark: | `import "github.com/golang-migrate/migrate/v4"` | Used for stable releases |
+**v3** | :x: | `import "github.com/golang-migrate/migrate"` (with package manager) or `import "gopkg.in/golang-migrate/migrate.v3"` (not recommended) | **DO NOT USE** - No longer supported |
 
-1. Fork the repository
-2. Create feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit changes (`git commit -m 'Add amazing feature'`)
-4. Push to branch (`git push origin feature/amazing-feature`)
-5. Open Pull Request
+## Development and Contributing
 
-## 📄 License
+Yes, please! [`Makefile`](Makefile) is your friend,
+read the [development guide](CONTRIBUTING.md).
 
-This project is licensed under the MIT License.
-
-## 🙏 Acknowledgments
-
-- Next.js Team
-- Go Community
-- shadcn/ui
-- Radix UI
-- Gin Framework
+Also have a look at the [FAQ](FAQ.md).
 
 ---
 
-**Built with ❤️ for better financial management**
+Looking for alternatives? [https://awesome-go.com/#database](https://awesome-go.com/#database).
