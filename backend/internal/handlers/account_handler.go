@@ -26,11 +26,11 @@ func (h *AccountHandler) Create(c *gin.Context) {
 
 	userID, _ := c.Get("user_id")
 	account := &models.Account{
-		UserID:   userID.(uuid.UUID),
-		Name:     req.Name,
-		Type:     req.Type,
-		Balance:  req.Balance,
-		Currency: req.Currency,
+		UserID:          userID.(uuid.UUID),
+		Name:            req.Name,
+		Type:            req.Type,
+		Currency:        req.Currency,
+		ParentAccountID: req.ParentAccountID,
 	}
 
 	if account.Currency == "" {
