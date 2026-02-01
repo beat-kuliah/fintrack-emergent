@@ -9,9 +9,7 @@ import { useTheme } from "@/lib/ThemeProvider";
 import {
   LayoutDashboard,
   Wallet,
-  TrendingUp,
   CreditCard,
-  PiggyBank,
   Receipt,
   Target,
   LogOut,
@@ -19,6 +17,7 @@ import {
   X,
   Sun,
   Moon,
+  Coins,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -39,11 +38,6 @@ const menuItems = [
     icon: Receipt,
   },
   {
-    title: "Pockets",
-    href: "/pockets",
-    icon: PiggyBank,
-  },
-  {
     title: "Budgets",
     href: "/budgets",
     icon: Target,
@@ -54,9 +48,9 @@ const menuItems = [
     icon: CreditCard,
   },
   {
-    title: "Investments",
-    href: "/investments",
-    icon: TrendingUp,
+    title: "Gold",
+    href: "/gold",
+    icon: Coins,
   },
 ];
 
