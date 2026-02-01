@@ -23,7 +23,7 @@ export default function HomePage() {
     // Check if already logged in
     const token = localStorage.getItem("token");
     if (token) {
-      // Verify token
+      // Verify token without blocking the page
       axios
         .get(`${API_URL}/auth/me`, {
           headers: { Authorization: `Bearer ${token}` },
