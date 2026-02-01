@@ -11,6 +11,7 @@ type User struct {
 	Email        string    `db:"email" json:"email"`
 	PasswordHash string    `db:"password_hash" json:"-"`
 	FullName     string    `db:"full_name" json:"full_name"`
+	IsAdmin      bool      `db:"is_admin" json:"is_admin"`
 	CreatedAt    time.Time `db:"created_at" json:"created_at"`
 	UpdatedAt    time.Time `db:"updated_at" json:"updated_at"`
 }
@@ -29,4 +30,25 @@ type LoginRequest struct {
 type LoginResponse struct {
 	Token string `json:"token"`
 	User  User   `json:"user"`
+}
+
+// Admin models
+type UpdateUserRequest struct {
+	FullName string `json:"full_name"`
+	IsAdmin  *bool  `json:"is_admin"`
+}
+
+type APIConfiguration struct {
+	ID        uuid.UUID              `db:"id" json:"id"`
+	APIName   string                 `db:"api_name" json:"api_name"`
+	APIType   string                 `db:"api_type" json:"api_type"`
+	Config    map[string]interface{} `db:"config" json:"config"`
+	IsActive  bool                   `db:"is_active" json:"is_active"`
+	CreatedAt time.Time              `db:"created_at" json:"created_at"`
+	UpdatedAt time.Time              `db:"updated_at" json:"updated_at"`
+}
+
+type UpdateAPIConfigRequest struct {
+	Config   map[string]interface{} `json:"config"`
+	IsActive *bool                  `json:"is_active"`
 }
