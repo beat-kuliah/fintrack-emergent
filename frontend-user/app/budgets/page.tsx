@@ -22,7 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import axios from "axios";
-import { Target, Plus, Trash2, TrendingDown } from "lucide-react";
+import { Target, Plus, Trash2, Copy, Calendar, ChevronLeft, ChevronRight } from "lucide-react";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -30,28 +30,45 @@ interface Budget {
   id: string;
   category: string;
   amount: number;
-  period: string;
-  start_date: string;
-  end_date: string;
+  budget_month: number;
+  budget_year: number;
 }
+
+const MONTHS = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December"
+];
 
 export default function BudgetsPage() {
   const [budgets, setBudgets] = useState<Budget[]>([]);
+  const [allBudgets, setAllBudgets] = useState<Budget[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [copyDialogOpen, setCopyDialogOpen] = useState(false);
+  
+  // Current view month/year
+  const [viewMonth, setViewMonth] = useState(new Date().getMonth() + 1);
+  const [viewYear, setViewYear] = useState(new Date().getFullYear());
+  
   const [formData, setFormData] = useState({
     category: "",
     amount: "",
-    period: "monthly",
-    start_date: new Date().toISOString().split("T")[0],
-    end_date: new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString().split("T")[0],
+  });
+
+  const [copyData, setCopyData] = useState({
+    fromMonth: new Date().getMonth(), // Previous month (0-indexed for display)
+    fromYear: new Date().getFullYear(),
   });
 
   useEffect(() => {
-    fetchBudgets();
+    fetchAllBudgets();
   }, []);
 
-  const fetchBudgets = async () => {
+  useEffect(() => {
+    filterBudgetsByMonth();
+  }, [viewMonth, viewYear, allBudgets]);
+
+  const fetchAllBudgets = async () => {
     const token = localStorage.getItem("token");
     if (!token) return;
 
@@ -59,12 +76,19 @@ export default function BudgetsPage() {
       const response = await axios.get(`${API_URL}/budgets`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setBudgets(response.data || []);
+      setAllBudgets(response.data || []);
     } catch (err) {
       console.error("Failed to fetch budgets", err);
     } finally {
       setLoading(false);
     }
+  };
+
+  const filterBudgetsByMonth = () => {
+    const filtered = allBudgets.filter(
+      b => b.budget_month === viewMonth && b.budget_year === viewYear
+    );
+    setBudgets(filtered);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -78,9 +102,8 @@ export default function BudgetsPage() {
         {
           category: formData.category,
           amount: parseFloat(formData.amount),
-          period: formData.period,
-          start_date: formData.start_date,
-          end_date: formData.end_date,
+          budget_month: viewMonth,
+          budget_year: viewYear,
         },
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -88,16 +111,37 @@ export default function BudgetsPage() {
       );
 
       setDialogOpen(false);
-      setFormData({
-        category: "",
-        amount: "",
-        period: "monthly",
-        start_date: new Date().toISOString().split("T")[0],
-        end_date: new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString().split("T")[0],
-      });
-      fetchBudgets();
+      setFormData({ category: "", amount: "" });
+      fetchAllBudgets();
     } catch (err: any) {
       alert(err.response?.data?.error || "Failed to create budget");
+    }
+  };
+
+  const handleCopy = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    try {
+      const response = await axios.post(
+        `${API_URL}/budgets/copy`,
+        {
+          from_month: copyData.fromMonth + 1, // Convert to 1-indexed
+          from_year: copyData.fromYear,
+          to_month: viewMonth,
+          to_year: viewYear,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      setCopyDialogOpen(false);
+      alert(`Successfully copied ${response.data.copied} budgets!`);
+      fetchAllBudgets();
+    } catch (err: any) {
+      alert(err.response?.data?.error || "Failed to copy budgets");
     }
   };
 
@@ -111,7 +155,7 @@ export default function BudgetsPage() {
       await axios.delete(`${API_URL}/budgets/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      fetchBudgets();
+      fetchAllBudgets();
     } catch (err: any) {
       alert(err.response?.data?.error || "Failed to delete budget");
     }
@@ -121,19 +165,44 @@ export default function BudgetsPage() {
     return budgets.reduce((sum, b) => sum + b.amount, 0);
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("id-ID", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
+  const goToPreviousMonth = () => {
+    if (viewMonth === 1) {
+      setViewMonth(12);
+      setViewYear(viewYear - 1);
+    } else {
+      setViewMonth(viewMonth - 1);
+    }
+  };
+
+  const goToNextMonth = () => {
+    if (viewMonth === 12) {
+      setViewMonth(1);
+      setViewYear(viewYear + 1);
+    } else {
+      setViewMonth(viewMonth + 1);
+    }
+  };
+
+  const openCopyDialog = () => {
+    // Set default "from" to previous month
+    let prevMonth = viewMonth - 1;
+    let prevYear = viewYear;
+    if (prevMonth === 0) {
+      prevMonth = 12;
+      prevYear = viewYear - 1;
+    }
+    setCopyData({
+      fromMonth: prevMonth - 1, // 0-indexed for Select
+      fromYear: prevYear,
     });
+    setCopyDialogOpen(true);
   };
 
   if (loading) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center py-12">
-          <p>Loading...</p>
+          <p className="dark:text-white">Loading...</p>
         </div>
       </DashboardLayout>
     );
@@ -150,18 +219,44 @@ export default function BudgetsPage() {
               Set and track your spending limits
             </p>
           </div>
-          <Button onClick={() => setDialogOpen(true)} data-testid="add-budget-button">
-            <Plus className="h-4 w-4 mr-2" />
-            Add Budget
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={openCopyDialog} data-testid="copy-budget-button">
+              <Copy className="h-4 w-4 mr-2" />
+              Copy from Previous
+            </Button>
+            <Button onClick={() => setDialogOpen(true)} data-testid="add-budget-button">
+              <Plus className="h-4 w-4 mr-2" />
+              Add Budget
+            </Button>
+          </div>
         </div>
+
+        {/* Month Navigator */}
+        <Card>
+          <CardContent className="py-4">
+            <div className="flex items-center justify-center gap-6">
+              <Button variant="outline" size="icon" onClick={goToPreviousMonth}>
+                <ChevronLeft className="h-5 w-5" />
+              </Button>
+              <div className="flex items-center gap-2 min-w-[200px] justify-center">
+                <Calendar className="h-5 w-5 text-amber-500" />
+                <span className="text-xl font-bold dark:text-white">
+                  {MONTHS[viewMonth - 1]} {viewYear}
+                </span>
+              </div>
+              <Button variant="outline" size="icon" onClick={goToNextMonth}>
+                <ChevronRight className="h-5 w-5" />
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Summary Card */}
         <Card className="bg-gradient-to-br from-amber-500 to-orange-600 text-white">
           <CardHeader>
-            <CardTitle className="text-white">Total Budget Allocated</CardTitle>
+            <CardTitle className="text-white">Total Budget for {MONTHS[viewMonth - 1]}</CardTitle>
             <CardDescription className="text-amber-100">
-              Across all {budgets.length} budgets
+              {budgets.length} budget categories
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -172,20 +267,28 @@ export default function BudgetsPage() {
         {/* Budgets List */}
         <Card data-testid="budgets-list">
           <CardHeader>
-            <CardTitle>Your Budgets</CardTitle>
-            <CardDescription>Manage your spending limits by category</CardDescription>
+            <CardTitle className="dark:text-white">Budget Categories</CardTitle>
+            <CardDescription className="dark:text-gray-400">
+              Your spending limits for {MONTHS[viewMonth - 1]} {viewYear}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             {budgets.length === 0 ? (
               <div className="text-center py-12" data-testid="no-budgets-message">
                 <Target className="h-16 w-16 mx-auto text-gray-400 mb-4" />
                 <p className="text-gray-500 dark:text-gray-400 mb-4">
-                  No budgets yet. Create your first budget to track spending.
+                  No budgets for {MONTHS[viewMonth - 1]} {viewYear}.
                 </p>
-                <Button onClick={() => setDialogOpen(true)}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Create Budget
-                </Button>
+                <div className="flex gap-2 justify-center">
+                  <Button variant="outline" onClick={openCopyDialog}>
+                    <Copy className="h-4 w-4 mr-2" />
+                    Copy from Previous Month
+                  </Button>
+                  <Button onClick={() => setDialogOpen(true)}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create Budget
+                  </Button>
+                </div>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -202,9 +305,6 @@ export default function BudgetsPage() {
                         </div>
                         <div>
                           <h3 className="font-semibold text-lg dark:text-white">{budget.category}</h3>
-                          <p className="text-sm text-gray-500 dark:text-gray-400 capitalize">
-                            {budget.period}
-                          </p>
                         </div>
                       </div>
                       <Button
@@ -219,13 +319,9 @@ export default function BudgetsPage() {
                     <div className="space-y-2">
                       <div className="flex justify-between items-center">
                         <span className="text-sm text-gray-600 dark:text-gray-400">Budget Amount:</span>
-                        <span className="font-bold text-lg dark:text-white">
+                        <span className="font-bold text-2xl dark:text-white">
                           Rp {budget.amount.toLocaleString("id-ID")}
                         </span>
-                      </div>
-                      <div className="flex justify-between items-center text-xs text-gray-500 dark:text-gray-400">
-                        <span>From: {formatDate(budget.start_date)}</span>
-                        <span>To: {formatDate(budget.end_date)}</span>
                       </div>
                       {/* Progress bar placeholder */}
                       <div className="mt-3">
@@ -251,7 +347,7 @@ export default function BudgetsPage() {
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogContent data-testid="add-budget-dialog">
             <DialogHeader>
-              <DialogTitle>Add New Budget</DialogTitle>
+              <DialogTitle>Add Budget for {MONTHS[viewMonth - 1]} {viewYear}</DialogTitle>
               <DialogDescription>
                 Set a spending limit for a specific category
               </DialogDescription>
@@ -282,47 +378,6 @@ export default function BudgetsPage() {
                     data-testid="budget-amount-input"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="period">Period</Label>
-                  <Select
-                    value={formData.period}
-                    onValueChange={(value) => setFormData({ ...formData, period: value })}
-                  >
-                    <SelectTrigger data-testid="budget-period-select">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="daily">Daily</SelectItem>
-                      <SelectItem value="weekly">Weekly</SelectItem>
-                      <SelectItem value="monthly">Monthly</SelectItem>
-                      <SelectItem value="yearly">Yearly</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="start_date">Start Date</Label>
-                    <Input
-                      id="start_date"
-                      type="date"
-                      value={formData.start_date}
-                      onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
-                      required
-                      data-testid="budget-start-date-input"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="end_date">End Date</Label>
-                    <Input
-                      id="end_date"
-                      type="date"
-                      value={formData.end_date}
-                      onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
-                      required
-                      data-testid="budget-end-date-input"
-                    />
-                  </div>
-                </div>
               </div>
               <DialogFooter>
                 <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
@@ -330,6 +385,75 @@ export default function BudgetsPage() {
                 </Button>
                 <Button type="submit" data-testid="submit-budget-button">
                   Create Budget
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
+
+        {/* Copy Budget Dialog */}
+        <Dialog open={copyDialogOpen} onOpenChange={setCopyDialogOpen}>
+          <DialogContent data-testid="copy-budget-dialog">
+            <DialogHeader>
+              <DialogTitle>Copy Budgets to {MONTHS[viewMonth - 1]} {viewYear}</DialogTitle>
+              <DialogDescription>
+                Copy all budget categories from a previous month
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleCopy}>
+              <div className="space-y-4 py-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>From Month</Label>
+                    <Select
+                      value={String(copyData.fromMonth)}
+                      onValueChange={(value) => setCopyData({ ...copyData, fromMonth: parseInt(value) })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {MONTHS.map((month, idx) => (
+                          <SelectItem key={idx} value={String(idx)}>
+                            {month}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>From Year</Label>
+                    <Select
+                      value={String(copyData.fromYear)}
+                      onValueChange={(value) => setCopyData({ ...copyData, fromYear: parseInt(value) })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {[2024, 2025, 2026, 2027].map((year) => (
+                          <SelectItem key={year} value={String(year)}>
+                            {year}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="p-4 bg-amber-50 dark:bg-amber-900/30 rounded-lg">
+                  <p className="text-sm text-amber-800 dark:text-amber-200">
+                    This will copy all budgets from <strong>{MONTHS[copyData.fromMonth]} {copyData.fromYear}</strong> to <strong>{MONTHS[viewMonth - 1]} {viewYear}</strong>.
+                    Existing budgets will not be overwritten.
+                  </p>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setCopyDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" data-testid="submit-copy-button">
+                  <Copy className="h-4 w-4 mr-2" />
+                  Copy Budgets
                 </Button>
               </DialogFooter>
             </form>
