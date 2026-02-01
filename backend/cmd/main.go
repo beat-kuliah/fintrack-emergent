@@ -31,19 +31,17 @@ func main() {
 	userRepo := repository.NewUserRepository(db)
 	accountRepo := repository.NewAccountRepository(db)
 	transactionRepo := repository.NewTransactionRepository(db)
-	pocketRepo := repository.NewPocketRepository(db)
 	budgetRepo := repository.NewBudgetRepository(db)
 	creditCardRepo := repository.NewCreditCardRepository(db)
-	investmentRepo := repository.NewInvestmentRepository(db)
+	goldRepo := repository.NewGoldRepository(db)
 
 	// Initialize handlers
 	authHandler := handlers.NewAuthHandler(userRepo)
 	accountHandler := handlers.NewAccountHandler(accountRepo)
 	transactionHandler := handlers.NewTransactionHandler(transactionRepo, accountRepo)
-	pocketHandler := handlers.NewPocketHandler(pocketRepo)
 	budgetHandler := handlers.NewBudgetHandler(budgetRepo)
 	creditCardHandler := handlers.NewCreditCardHandler(creditCardRepo)
-	investmentHandler := handlers.NewInvestmentHandler(investmentRepo)
+	goldHandler := handlers.NewGoldHandler(goldRepo)
 
 	// Setup Gin router
 	router := gin.Default()
@@ -77,11 +75,15 @@ func main() {
 			auth.GET("/me", middleware.AuthMiddleware(), authHandler.GetMe)
 		}
 
+		// Public gold price endpoint
+		api.GET("/gold/price", goldHandler.GetLatestPrice)
+		api.GET("/gold/price/history", goldHandler.GetPriceHistory)
+
 		// Protected routes
 		protected := api.Group("/")
 		protected.Use(middleware.AuthMiddleware())
 		{
-			// Accounts routes
+			// Accounts routes (includes sub-accounts/pockets functionality)
 			accounts := protected.Group("/accounts")
 			{
 				accounts.POST("", accountHandler.Create)
@@ -100,20 +102,12 @@ func main() {
 				transactions.DELETE("/:id", transactionHandler.Delete)
 			}
 
-			// Pockets routes
-			pockets := protected.Group("/pockets")
-			{
-				pockets.POST("", pocketHandler.Create)
-				pockets.GET("", pocketHandler.GetAll)
-				pockets.GET("/:id", pocketHandler.GetByID)
-				pockets.DELETE("/:id", pocketHandler.Delete)
-			}
-
-			// Budgets routes
+			// Budgets routes (with month/year picker and copy feature)
 			budgets := protected.Group("/budgets")
 			{
 				budgets.POST("", budgetHandler.Create)
 				budgets.GET("", budgetHandler.GetAll)
+				budgets.POST("/copy", budgetHandler.CopyFromMonth)
 				budgets.GET("/:id", budgetHandler.GetByID)
 				budgets.DELETE("/:id", budgetHandler.Delete)
 			}
@@ -127,13 +121,16 @@ func main() {
 				creditCards.DELETE("/:id", creditCardHandler.Delete)
 			}
 
-			// Investments routes
-			investments := protected.Group("/investments")
+			// Gold assets routes (replacing investments)
+			gold := protected.Group("/gold")
 			{
-				investments.POST("", investmentHandler.Create)
-				investments.GET("", investmentHandler.GetAll)
-				investments.GET("/:id", investmentHandler.GetByID)
-				investments.DELETE("/:id", investmentHandler.Delete)
+				gold.POST("/assets", goldHandler.CreateAsset)
+				gold.GET("/assets", goldHandler.GetAllAssets)
+				gold.GET("/assets/:id", goldHandler.GetAssetByID)
+				gold.DELETE("/assets/:id", goldHandler.DeleteAsset)
+				gold.GET("/summary", goldHandler.GetSummary)
+				// Admin: update today's price
+				gold.POST("/price", goldHandler.UpdateTodayPrice)
 			}
 		}
 	}
@@ -149,10 +146,14 @@ func main() {
 	fmt.Println("   POST   /api/auth/register")
 	fmt.Println("   POST   /api/auth/login")
 	fmt.Println("   GET    /api/auth/me")
-	fmt.Println("   POST   /api/accounts")
-	fmt.Println("   GET    /api/accounts")
-	fmt.Println("   GET    /api/accounts/:id")
-	fmt.Println("   DELETE /api/accounts/:id")
+	fmt.Println("   CRUD   /api/accounts (with sub-accounts)")
+	fmt.Println("   CRUD   /api/transactions")
+	fmt.Println("   CRUD   /api/budgets (month/year based)")
+	fmt.Println("   POST   /api/budgets/copy (copy from previous month)")
+	fmt.Println("   CRUD   /api/credit-cards")
+	fmt.Println("   CRUD   /api/gold/assets")
+	fmt.Println("   GET    /api/gold/summary")
+	fmt.Println("   GET    /api/gold/price")
 	fmt.Println()
 
 	if err := router.Run(":" + port); err != nil {
